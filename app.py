@@ -4,7 +4,8 @@ import random
 import datetime
 import pandas as pd
 import numpy as np
-import google.generativeai as genai
+from google import genai   # NEW import
+from google.genai import types   # NEW for config if needed
 from flask import Flask, render_template_string, jsonify
 from apscheduler.schedulers.background import BackgroundScheduler
 from sklearn.linear_model import LinearRegression
@@ -13,10 +14,11 @@ import threading
 
 app = Flask(__name__)
 
-# === SET YOUR GEMINI KEY HERE ===
-GEMINI_API_KEY = "AIzaSyBBd5AcefTw1cpSgKfx32tfQHtrKAKqmUE"  # Paste your key from aistudio.google.com
+# === SET YOUR GEMINI API KEY HERE ===
+GEMINI_API_KEY = "AIzaSyBBd5AcefTw1cpSgKfx32tfQHtrKAKqmUE"  # Paste the key from https://aistudio.google.com/app/apikey
 
-genai.configure(api_key=GEMINI_API_KEY)
+# Create the new GenAI client
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 class Config:
     INITIAL_AD_BUDGET = 0
