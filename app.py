@@ -14,7 +14,7 @@ import threading
 app = Flask(__name__)
 
 # === PASTE YOUR GEMINI API KEY HERE ===
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE"
+GEMINI_API_KEY = "AIzaSyBBd5AcefTw1cpSgKfx32tfQHtrKAKqmUE"
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
