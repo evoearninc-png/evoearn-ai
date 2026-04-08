@@ -14,12 +14,12 @@ import threading
 app = Flask(__name__)
 
 # === PASTE YOUR GEMINI API KEY HERE ===
-GEMINI_API_KEY = "AIzaSyBBd5AcefTw1cpSgKfx32tfQHtrKAKqmUE"   # ←←← REPLACE WITH THE KEY FROM aistudio.google.com
+GEMINI_API_KEY = "AIzaSyBBd5AcefTw1cpSgKfx32tfQHtrKAKqmUE"   # ← From https://aistudio.google.com/app/apikey
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 class Config:
-    INITIAL_AD_BUDGET = 0
+    INITIAL_AD_BUDGET = 0  # ZERO budget mode
 
 config = Config()
 
@@ -100,35 +100,35 @@ def select_best_strategy(ad_budget):
     return best
 
 def generate_full_content(niche, content_type):
-    prompt = f"""Create a helpful, SEO-friendly 800-word blog post titled: "Top 10 {niche.replace('_', ' ').title()} Tips & Free Resources for 2026"
+        prompt = f"""Create a helpful, SEO-friendly 800-word blog post titled: "Top 10 {niche.replace('_', ' ').title()} Tips & Free Resources for 2026"
 Content type: {content_type}
-Make it engaging, list-based, and include 3-5 natural places for affiliate links (Amazon or ClickBank products).
+Make it engaging, list-based. Include 4-6 natural affiliate links from: Amazon Associates, ClickBank, ShareASale, Impact.com, CJ Affiliate, eBay Partner Network, Walmart Affiliate.
 Also provide:
-1. A short Pinterest pin description (max 200 chars)
-2. A detailed image prompt for Canva or free AI image tool
+1. Short Pinterest pin description (max 200 chars)
+2. Detailed Canva image prompt
 Output in clear sections: TITLE, FULL_ARTICLE, PIN_DESCRIPTION, IMAGE_PROMPT"""
-
-    response = client.models.generate_content(
-        model="gemini-1.5-flash",
-        contents=prompt
-    )
-    return response.text
-
+	
 def run_automation_cycle():
-    print(f"[{datetime.datetime.now()}] EvoEarn AI cycle starting...")
+    print(f"[{datetime.datetime.now()}] EvoEarn AI organic cycle starting...")
     strategy = select_best_strategy(0)
     niche = strategy['niche']
     content_type = strategy['content_type']
-    
-    print(f"   → Generating full content for: {niche} ({content_type})")
-    full_content = generate_full_content(niche, content_type)
-    
+    content_title = f"Top 10 {niche.replace('_', ' ').title()} Tips & Free Resources for 2026"
+    print(f"   → New idea ready: {content_title} ({content_type})")
+    print(f"   → Post this to Pinterest + Medium for free traffic!")
+
     filename = f"content_{niche}_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.txt"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(full_content)
     
     print(f"   → Full article + pin info saved to: {filename}")
     print(f"   → Next: Copy to Medium, generate image in Canva, post to Pinterest")
+
+    print("\n" + "="*60)
+    print("=== COPY THIS ENTIRE BLOCK TO MEDIUM ===")
+    print(full_content)
+    print("=== END OF GENERATED CONTENT ===")
+    print("="*60)
 
     base = strategy['base_revenue'] * 0.6
     improvement = 1.0
@@ -153,12 +153,12 @@ def run_automation_cycle():
     print(f"   → Projected weekly income: ${weekly:.2f} (improving toward $10k)")
     conn.close()
 
-    if count % 10 == 0 and count > 0:
+    if count % 10 == 0:
         train_ml_model()
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html><head><title>EvoEarn AI Dashboard</title>
+<html><head><title>EvoEarn AI Dashboard</title>*
 <style>body{font-family:Arial;background:#111;color:#0f0;padding:20px;} h1{color:#0f0;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #0f0;padding:8px;}</style>
 </head><body>
 <h1>EvoEarn AI — Running 24/7 & Getting Smarter!</h1>
@@ -171,9 +171,7 @@ fetch('/data').then(r=>r.json()).then(data=>{
   document.getElementById('total').innerText = '$' + data.total.toFixed(2);
   document.getElementById('proj').innerText = '$' + data.weekly.toFixed(2) + '/week';
   let html = '';
-data.logs.forEach(l => {
-    html += `<tr><td>${l.timestamp}</td><td>${l.strategy}</td><td>$${l.revenue}</td><td>$${l.ad_spend}</td></tr>`;
-  });
+  data.logs.forEach(l => { html += `<tr><td>${l.timestamp.slice(0,10)}</td><td>${l.strategy}</td><td>$${l.revenue}</td></tr>`; });
   document.getElementById('table').innerHTML += html;
 });
 </script>
@@ -194,18 +192,18 @@ def data():
     conn.close()
     return jsonify({"total": float(total), "weekly": float(weekly), "logs": df.to_dict('records')})
 
-# Scheduler (safe for Render)
-scheduler = BackgroundScheduler()
-scheduler.add_job(run_automation_cycle, 'interval', minutes=5)  # Change to hours=6 later for slower pace
-
 def start_scheduler():
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(run_automation_cycle, 'interval', minutes=5)  # Fast demo mode — change to hours=6 later
     scheduler.start()
-    print("✅ EvoEarn AI scheduler started — running 24/7!")
+    print("✅ EvoEarn AI is now running 24/7!")
+
 
 threading.Thread(target=start_scheduler, daemon=True).start()
 
 if __name__ == "__main__":
     init_db()
     train_ml_model()
-    print("🌐 Dashboard ready at http://127.0.0.1:5000")
-    # Render uses Gunicorn — no app.run() here
+    threading.Thread(target=start_scheduler, daemon=True).start()
+    print("🌐 Dashboard starting → open http://127.0.0.1:5000")
+    app.run(host='0.0.0.0', port=5000, debug=False)
